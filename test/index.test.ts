@@ -98,11 +98,11 @@ describe("Main Functionality", function () {
       
     })
 
-    it("UnstakeNFT function with high stake period time", async () => {
+    xit("UnstakeNFT function with high stake period time", async () => {
       await expect(stakingContract1.connect(acc1).unStakeNFT(tokenId)).to.be.reverted
     })
 
-    xit("UnstakeNFT function", async () => {
+    it("UnstakeNFT function", async () => {
       // bad tokenId
       await expect(stakingContract1.connect(acc1).unStakeNFT(10)).to.be.reverted
       // token doesnt belong to provided address
@@ -125,6 +125,24 @@ describe("Main Functionality", function () {
       assert.equal(await nftContract1.ownerOf(tokenId), acc1.address, 'After calling unstake function, owner of NFT should be changed')
 
     })
+
+    it("Blocking contract", async () => {
+      await stakingFactoryContract.blockNFTStakingContract(nftContract1.address);
+  
+      const blocked = await stakingContract1.blocked()
+      assert.equal(blocked, true, "Contract should be blocked");
+      
+      // checking if blocked contract will revert stake function
+      await expect(stakingContract1.connect(acc1.address).stakeNFT(tokenId)).to.be.reverted;
+      
+      await stakingFactoryContract.unBlockNFTStakingContract(nftContract1.address);
+
+      // checking if after unblocking contract, stake function will pass through
+      await expect(stakingContract1.connect(acc1.address).stakeNFT(tokenId)).to.not.be.reverted
+      
+  
+    })
+
   })
 
 })

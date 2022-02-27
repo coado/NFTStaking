@@ -10,8 +10,10 @@ contract LogicContract is ERC20 {
     event UnstakeNFT(address sender, uint tokenId);
 
     address public NFTStakingContract;
+    address public owner;
 
     bool public initialized = false;
+    bool public blocked = false;
     
     uint public stakingPeriod = 365 days;
     uint public stakingRewardsPerNFT = 1000;
@@ -22,19 +24,25 @@ contract LogicContract is ERC20 {
     mapping (address => uint[]) public userStakingTokens;
 
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only Owner");
+        _; 
+    } 
+
 
     function init(address _address) public {
         require(!initialized, "Contract has been already initialized");
 
         NFTStakingContract = _address;
+        owner = msg.sender;
         initialized = true;
     }
 
     function stakeNFT(uint _tokenId) external {
-        uint startGas = gasleft();
         // There is no necessity to check if token is already staked, because
         // even if is, it wouldn't be transfered to this contract
         require(_tokenId != 0, "Token id is equal to 0");
+        require(!blocked, "Contract is blocked");
 
         userStakingData[msg.sender][_tokenId] = block.timestamp;
         userStakingTokens[msg.sender].push(_tokenId);
@@ -44,13 +52,10 @@ contract LogicContract is ERC20 {
         nftContract.transferFrom(msg.sender, address(this), _tokenId);
 
         emit NewNFTInStaking(msg.sender, _tokenId);
-        console.log(startGas - gasleft());
     }  
 
     function unStakeNFT(uint _tokenId) external {
         require(userStakingData[msg.sender][_tokenId] != 0, "NFT is not staking");
-        uint endStakingTimestamp = userStakingData[msg.sender][_tokenId] + stakingPeriod;
-        require(endStakingTimestamp < block.timestamp, "Your NFT is still in staking");
 
         delete userStakingData[msg.sender][_tokenId];
         
@@ -73,7 +78,12 @@ contract LogicContract is ERC20 {
 
         nftContract.transferFrom(address(this), msg.sender, _tokenId);
 
-        mint(stakingRewardsPerNFT);
+        if (!blocked) {
+            uint endStakingTimestamp = userStakingData[msg.sender][_tokenId] + stakingPeriod;
+            require(endStakingTimestamp < block.timestamp, "Your NFT is still in staking");
+            mint(stakingRewardsPerNFT);
+        }
+            
 
         emit UnstakeNFT(msg.sender, _tokenId);
 
@@ -83,6 +93,16 @@ contract LogicContract is ERC20 {
         balanceOf[msg.sender] += amount;
         totalSupply += amount;
         emit Transfer(address(0), msg.sender, amount);
+    }
+
+    function blockContract() public onlyOwner {
+        require(!blocked, "Contract is not blocked");
+        blocked = true;
+    }
+
+    function unBlockContract() public onlyOwner {
+        require(blocked, "Contract is not blocked");
+        blocked = false;
     }
 
 }

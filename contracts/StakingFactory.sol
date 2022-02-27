@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+import "hardhat/console.sol";
 
 contract StakingFactory {
     event AddedNewContract(address indexed NFTContract, address indexed proxyContract);
@@ -35,7 +36,46 @@ contract StakingFactory {
         emit AddedNewContract(_contractAddress, newAddress);
     }
 
+    function blockNFTStakingContract(address _contractAddress) external onlyOwner {
+        require(stakingContracts[_contractAddress] != address(0), "There is no contract for provided NFT");
+        require(_contractAddress != address(0), "Provided address is address 0");
 
+        address proxyContract = stakingContracts[_contractAddress];
+
+        bytes memory data = _checkBlockedContract(proxyContract);
+        bool blocked = abi.decode(data, (bool));
+
+        // checking if contract is not blocked already
+        require(!blocked, "Contract is currently blocked");
+
+        (bool success,) = proxyContract.call(abi.encodeWithSignature("blockContract()"));
+
+        require(success);
+    }
+
+    function unBlockNFTStakingContract(address _contractAddress) external onlyOwner {
+        require(stakingContracts[_contractAddress] != address(0), "There is no contract for provided NFT");
+        require(_contractAddress != address(0), "Provided address is address 0");
+
+        address proxyContract = stakingContracts[_contractAddress];
+
+        bytes memory data = _checkBlockedContract(proxyContract);
+        bool blocked = abi.decode(data, (bool));
+
+        // checking if contract is blocked
+        require(blocked, "Contract is currently unblocked");
+
+        (bool success,) = proxyContract.call(abi.encodeWithSignature("unBlockContract()"));
+
+        require(success);
+    }
+
+
+    function _checkBlockedContract(address _proxyContract) private returns (bytes memory) {
+        (bool success, bytes memory data) = _proxyContract.call(abi.encodeWithSignature("blocked()"));
+        require(success);
+        return data;
+    } 
 
 
     function _clone(address _target) private returns (address result) {
