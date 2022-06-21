@@ -1,5 +1,5 @@
 
-Just an idea of NFT staking contract, which show usecase of the minimal proxy contracts. 
+Just an idea of the NFT staking contract. It shows the use-case of the minimal proxy contracts. 
 
 ![image](https://user-images.githubusercontent.com/64146291/155851023-20d4ab9c-827c-4636-a74b-0f7ede132294.png)
 
