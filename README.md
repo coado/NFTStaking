@@ -1,4 +1,7 @@
 
+![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)
+![Solidity](https://img.shields.io/badge/Solidity-%23363636.svg?style=for-the-badge&logo=solidity&logoColor=white)
+
 Just an idea of the NFT staking contract. It shows the use-case of the minimal proxy contracts. 
 
 ![image](https://user-images.githubusercontent.com/64146291/155851023-20d4ab9c-827c-4636-a74b-0f7ede132294.png)
